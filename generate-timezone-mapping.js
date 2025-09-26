@@ -1,0 +1,91 @@
+#!/usr/bin/env node
+
+const fs = require('fs');
+const path = require('path');
+
+// Configurable working hours (24-hour format)
+const WORKING_HOURS = {
+  startHour: 10, // 10 AM
+  endHour: 2,    // 2 AM (next day, inclusive)
+};
+
+function formatTo12Hour(hour) {
+  if (hour === 0) return '12:00 AM';
+  if (hour < 12) return `${hour}:00 AM`;
+  if (hour === 12) return '12:00 PM';
+  return `${hour - 12}:00 PM`;
+}
+
+function isWorkingHours(hour, timezone) {
+  // Use configurable working hours for both timezones
+  if (WORKING_HOURS.startHour <= WORKING_HOURS.endHour) {
+    // Normal case: start and end on same day (e.g., 9 AM to 6 PM)
+    return hour >= WORKING_HOURS.startHour && hour <= WORKING_HOURS.endHour;
+  } else {
+    // Overnight case: spans midnight (e.g., 10 AM to 2 AM next day)
+    const endOfDay = 23;
+    const startOfDay = 0;
+    return (hour >= WORKING_HOURS.startHour && hour <= endOfDay) ||
+           (hour >= startOfDay && hour <= WORKING_HOURS.endHour);
+  }
+}
+
+function isOverlappingWorkingHours(sgtHour, pdtHour) {
+  const sgtWorking = isWorkingHours(sgtHour, 'SGT');
+  const pdtWorking = isWorkingHours(pdtHour, 'PDT');
+  return sgtWorking && pdtWorking;
+}
+
+function generateTimezoneMapping() {
+  const mappings = [];
+  let prevOverlapping = false;
+
+  // Generate mappings for each hour of the day (SGT)
+  for (let sgtHour = 0; sgtHour < 24; sgtHour++) {
+    // SGT is UTC+8
+    // PST is UTC-8 (16 hours behind SGT)
+    // PDT is UTC-7 (15 hours behind SGT)
+
+    const pstHour = (sgtHour - 16 + 24) % 24;
+    const pdtHour = (sgtHour - 15 + 24) % 24;
+
+    const sgtTime = formatTo12Hour(sgtHour);
+    const pstTime = formatTo12Hour(pstHour);
+    const pdtTime = formatTo12Hour(pdtHour);
+
+    const overlapping = isOverlappingWorkingHours(sgtHour, pdtHour);
+
+    // Check if we're ending an overlapping working hours block (before adding the line)
+    if (!overlapping && prevOverlapping) {
+      mappings.push('--- END: Overlapping working hours (SGT & PDT) ---');
+    }
+
+    // Check if we're starting an overlapping working hours block
+    if (overlapping && !prevOverlapping) {
+      mappings.push('--- START: Overlapping working hours (SGT & PDT) ---');
+    }
+
+    // Format with padding and vertical separators for alignment
+    const sgtFormatted = (sgtTime + ' SGT').padEnd(12);
+    const pdtFormatted = (pdtTime + ' PDT').padEnd(12);
+    const pstFormatted = (pstTime + ' PST').padEnd(12);
+
+    mappings.push(`${sgtFormatted} | ${pdtFormatted} | ${pstFormatted}`);
+
+    prevOverlapping = overlapping;
+  }
+
+  // Create the markdown content
+  const content = `## SGT timezone vs SF timezone (PDT/PST)
+
+${mappings.join('\n')}
+`;
+
+  // Write to file
+  const outputPath = path.join(__dirname, 'timezone-mapping.md');
+  fs.writeFileSync(outputPath, content);
+
+  console.log(`Timezone mapping generated at: ${outputPath}`);
+}
+
+generateTimezoneMapping();
