@@ -88,7 +88,7 @@ ${mappings.join("\n")}
 `;
 
   // Write to file
-  const outputPath = path.join(__dirname, "timezone-mapping.md");
+  const outputPath = path.join(__dirname, "README.md");
   fs.writeFileSync(outputPath, content);
 
   console.log(`Timezone mapping generated at: ${outputPath}`);
