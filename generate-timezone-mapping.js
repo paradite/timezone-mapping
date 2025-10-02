@@ -47,13 +47,19 @@ function generateTimezoneMapping() {
     // SGT is UTC+8
     // PST is UTC-8 (16 hours behind SGT)
     // PDT is UTC-7 (15 hours behind SGT)
+    // EST is UTC-5 (13 hours behind SGT)
+    // EDT is UTC-4 (12 hours behind SGT)
 
     const pstHour = (sgtHour - 16 + 24) % 24;
     const pdtHour = (sgtHour - 15 + 24) % 24;
+    const estHour = (sgtHour - 13 + 24) % 24;
+    const edtHour = (sgtHour - 12 + 24) % 24;
 
     const sgtTime = formatTo12Hour(sgtHour);
     const pstTime = formatTo12Hour(pstHour);
     const pdtTime = formatTo12Hour(pdtHour);
+    const estTime = formatTo12Hour(estHour);
+    const edtTime = formatTo12Hour(edtHour);
 
     const overlapping = isOverlappingWorkingHours(sgtHour, pdtHour);
 
@@ -73,14 +79,16 @@ function generateTimezoneMapping() {
     const sgtFormatted = (sgtTime + " SGT").padEnd(12);
     const pdtFormatted = (pdtTime + " PDT").padEnd(12);
     const pstFormatted = (pstTime + " PST").padEnd(12);
+    const edtFormatted = (edtTime + " EDT").padEnd(12);
+    const estFormatted = (estTime + " EST").padEnd(12);
 
-    mappings.push(`${sgtFormatted} | ${pdtFormatted} | ${pstFormatted}`);
+    mappings.push(`${sgtFormatted} | ${pdtFormatted} | ${pstFormatted} | ${edtFormatted} | ${estFormatted}`);
 
     prevOverlapping = overlapping;
   }
 
   // Create the markdown content
-  const content = `## SGT timezone vs SF timezone (PDT/PST)
+  const content = `## SGT timezone vs SF timezone (PDT/PST) & New York timezone (EDT/EST)
 
 \`\`\`
 ${mappings.join("\n")}
