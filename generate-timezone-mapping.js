@@ -34,10 +34,10 @@ function isWorkingHours(hour, timezone) {
 
 function isOverlappingWorkingHours(sgtHour, pdtHour, edtHour, cetHour) {
   const sgtWorking = isWorkingHours(sgtHour, "SGT");
-  const pdtWorking = isWorkingHours(pdtHour, "PDT");
+  // const pdtWorking = isWorkingHours(pdtHour, "PDT");
   const edtWorking = isWorkingHours(edtHour, "EDT");
   const cetWorking = isWorkingHours(cetHour, "CET");
-  return sgtWorking && pdtWorking && edtWorking && cetWorking;
+  return sgtWorking && edtWorking && cetWorking;
 }
 
 function generateTimezoneMapping() {
