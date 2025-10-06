@@ -5,7 +5,7 @@ const path = require("path");
 
 // Configurable working hours (24-hour format)
 const WORKING_HOURS = {
-  startHour: 10, // 10 AM
+  startHour: 9, // 9 AM
   endHour: 2, // 2 AM (next day, inclusive)
 };
 
@@ -66,7 +66,12 @@ function generateTimezoneMapping() {
     const edtTime = formatTo12Hour(edtHour);
     const cetTime = formatTo12Hour(cetHour);
 
-    const overlapping = isOverlappingWorkingHours(sgtHour, pdtHour, edtHour, cetHour);
+    const overlapping = isOverlappingWorkingHours(
+      sgtHour,
+      pdtHour,
+      edtHour,
+      cetHour
+    );
 
     // Check if we're ending an overlapping working hours block (before adding the line)
     if (!overlapping && prevOverlapping) {
@@ -77,7 +82,9 @@ function generateTimezoneMapping() {
     // Check if we're starting an overlapping working hours block
     if (overlapping && !prevOverlapping) {
       mappings.push(""); // Empty line before START
-      mappings.push("--- START: Overlapping working hours (SGT & EDT & CET) ---");
+      mappings.push(
+        "--- START: Overlapping working hours (SGT & EDT & CET) ---"
+      );
     }
 
     // Format with padding and vertical separators for alignment
@@ -88,7 +95,9 @@ function generateTimezoneMapping() {
     // const estFormatted = (estTime + " EST").padEnd(12);
     const cetFormatted = (cetTime + " CET").padEnd(12);
 
-    mappings.push(`${sgtFormatted} | ${pdtFormatted} | ${edtFormatted} | ${cetFormatted}`);
+    mappings.push(
+      `${sgtFormatted} | ${pdtFormatted} | ${edtFormatted} | ${cetFormatted}`
+    );
 
     prevOverlapping = overlapping;
   }
