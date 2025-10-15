@@ -6,8 +6,17 @@ const path = require("path");
 // Configurable working hours (24-hour format)
 const WORKING_HOURS = {
   startHour: 9, // 9 AM
-  endHour: 2, // 2 AM (next day, inclusive)
+  endHour: 1, // 1 AM (next day, inclusive)
 };
+
+// Configurable timezones
+// Each timezone has:
+// - name: Display name for the timezone
+// - offset: Hours difference from SGT (negative means behind SGT)
+const TIMEZONES = [
+  { name: "SGT", offset: 0, description: "Singapore Time" },
+  { name: "PDT", offset: -15, description: "Pacific Daylight Time (SF)" },
+];
 
 function formatTo12Hour(hour) {
   if (hour === 0) return "12:00 AM";
@@ -16,8 +25,8 @@ function formatTo12Hour(hour) {
   return `${hour - 12}:00 PM`;
 }
 
-function isWorkingHours(hour, timezone) {
-  // Use configurable working hours for both timezones
+function isWorkingHours(hour) {
+  // Use configurable working hours for all timezones
   if (WORKING_HOURS.startHour <= WORKING_HOURS.endHour) {
     // Normal case: start and end on same day (e.g., 9 AM to 6 PM)
     return hour >= WORKING_HOURS.startHour && hour <= WORKING_HOURS.endHour;
@@ -32,50 +41,36 @@ function isWorkingHours(hour, timezone) {
   }
 }
 
-function isOverlappingWorkingHours(sgtHour, pdtHour, edtHour, cetHour) {
-  const sgtWorking = isWorkingHours(sgtHour, "SGT");
-  // const pdtWorking = isWorkingHours(pdtHour, "PDT");
-  const edtWorking = isWorkingHours(edtHour, "EDT");
-  const cetWorking = isWorkingHours(cetHour, "CET");
-  return sgtWorking && edtWorking && cetWorking;
+function isOverlappingWorkingHours(hours) {
+  // Check if all timezones are in working hours
+  return hours.every((hour) => isWorkingHours(hour));
 }
 
 function generateTimezoneMapping() {
   const mappings = [];
   let prevOverlapping = false;
 
-  // Generate mappings for each hour of the day (SGT)
-  for (let sgtHour = 0; sgtHour < 24; sgtHour++) {
-    // SGT is UTC+8
-    // PST is UTC-8 (16 hours behind SGT)
-    // PDT is UTC-7 (15 hours behind SGT)
-    // EST is UTC-5 (13 hours behind SGT)
-    // EDT is UTC-4 (12 hours behind SGT)
-    // CET is UTC+1 (7 hours behind SGT)
+  // Use the first timezone as the base (typically SGT)
+  const baseTimezone = TIMEZONES[0];
 
-    const pstHour = (sgtHour - 16 + 24) % 24;
-    const pdtHour = (sgtHour - 15 + 24) % 24;
-    const estHour = (sgtHour - 13 + 24) % 24;
-    const edtHour = (sgtHour - 12 + 24) % 24;
-    const cetHour = (sgtHour - 7 + 24) % 24;
+  // Generate mappings for each hour of the day (base timezone)
+  for (let baseHour = 0; baseHour < 24; baseHour++) {
+    // Calculate hours for all timezones
+    const hours = TIMEZONES.map((tz) => {
+      const hour = (baseHour + tz.offset + 24) % 24;
+      return hour;
+    });
 
-    const sgtTime = formatTo12Hour(sgtHour);
-    // const pstTime = formatTo12Hour(pstHour);
-    const pdtTime = formatTo12Hour(pdtHour);
-    // const estTime = formatTo12Hour(estHour);
-    const edtTime = formatTo12Hour(edtHour);
-    const cetTime = formatTo12Hour(cetHour);
+    const overlapping = isOverlappingWorkingHours(hours);
 
-    const overlapping = isOverlappingWorkingHours(
-      sgtHour,
-      pdtHour,
-      edtHour,
-      cetHour
-    );
+    // Generate timezone names for the markers (excluding base timezone)
+    const timezoneNames = TIMEZONES.map((tz) => tz.name).join(" & ");
 
     // Check if we're ending an overlapping working hours block (before adding the line)
     if (!overlapping && prevOverlapping) {
-      mappings.push("--- END: Overlapping working hours (SGT & EDT & CET) ---");
+      mappings.push(
+        `--- END: Overlapping working hours (${timezoneNames}) ---`
+      );
       mappings.push(""); // Empty line after END
     }
 
@@ -83,27 +78,28 @@ function generateTimezoneMapping() {
     if (overlapping && !prevOverlapping) {
       mappings.push(""); // Empty line before START
       mappings.push(
-        "--- START: Overlapping working hours (SGT & EDT & CET) ---"
+        `--- START: Overlapping working hours (${timezoneNames}) ---`
       );
     }
 
     // Format with padding and vertical separators for alignment
-    const sgtFormatted = (sgtTime + " SGT").padEnd(12);
-    const pdtFormatted = (pdtTime + " PDT").padEnd(12);
-    // const pstFormatted = (pstTime + " PST").padEnd(12);
-    const edtFormatted = (edtTime + " EDT").padEnd(12);
-    // const estFormatted = (estTime + " EST").padEnd(12);
-    const cetFormatted = (cetTime + " CET").padEnd(12);
+    const formattedTimes = TIMEZONES.map((tz, index) => {
+      const time = formatTo12Hour(hours[index]);
+      return (time + " " + tz.name).padEnd(12);
+    });
 
-    mappings.push(
-      `${sgtFormatted} | ${pdtFormatted} | ${edtFormatted} | ${cetFormatted}`
-    );
+    mappings.push(formattedTimes.join(" | "));
 
     prevOverlapping = overlapping;
   }
 
+  // Generate title from timezone names
+  const timezoneTitle = TIMEZONES.map((tz, index) =>
+    index === 0 ? `${tz.name} timezone` : `${tz.description} (${tz.name})`
+  ).join(" vs ");
+
   // Create the markdown content
-  const content = `## SGT timezone vs SF timezone (PDT) & New York timezone (EDT) & Central European Time (CET)
+  const content = `## ${timezoneTitle}
 
 \`\`\`
 ${mappings.join("\n")}
