@@ -20,9 +20,9 @@ const TIMEZONES = [
 
 function formatTo12Hour(hour) {
   if (hour === 0) return "12:00 AM";
-  if (hour < 12) return `${hour}:00 AM`;
+  if (hour < 12) return `${String(hour).padStart(2, " ")}:00 AM`;
   if (hour === 12) return "12:00 PM";
-  return `${hour - 12}:00 PM`;
+  return `${String(hour - 12).padStart(2, " ")}:00 PM`;
 }
 
 function isWorkingHours(hour) {
@@ -49,9 +49,6 @@ function isOverlappingWorkingHours(hours) {
 function generateTimezoneMapping() {
   const mappings = [];
   let prevOverlapping = false;
-
-  // Use the first timezone as the base (typically SGT)
-  const baseTimezone = TIMEZONES[0];
 
   // Generate mappings for each hour of the day (base timezone)
   for (let baseHour = 0; baseHour < 24; baseHour++) {
