@@ -16,6 +16,7 @@ const WORKING_HOURS = {
 const TIMEZONES = [
   { name: "SGT", offset: 0, description: "Singapore Time" },
   { name: "PDT", offset: -15, description: "Pacific Daylight Time (SF)" },
+  { name: "PST", offset: -16, description: "Pacific Standard Time (SF)" },
 ];
 
 function formatTo12Hour(hour) {
