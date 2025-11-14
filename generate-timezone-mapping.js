@@ -5,7 +5,7 @@ const path = require("path");
 
 // Configurable working hours (24-hour format)
 const WORKING_HOURS = {
-  startHour: 9, // 9 AM
+  startHour: 8, // 8 AM
   endHour: 1, // 1 AM (next day, inclusive)
 };
 
