@@ -15,7 +15,7 @@ const WORKING_HOURS = {
 // - offset: Hours difference from SGT (negative means behind SGT)
 const TIMEZONES = [
   { name: "SGT", offset: 0, description: "Singapore Time" },
-  { name: "PDT", offset: -15, description: "Pacific Daylight Time (SF)" },
+  { name: "CET", offset: -7, description: "Central European Time" },
   { name: "PST", offset: -16, description: "Pacific Standard Time (SF)" },
 ];
 
